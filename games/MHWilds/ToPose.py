@@ -177,7 +177,12 @@ class MHWildstpose(bpy.types.Operator):
             #若有某些子级网格对象在当前视图层为隐藏状态，则强制将其设为显示状态
             for child in ArmatureObj.children:
                 child.hide_set(False)
-            bpy.ops.object.select_grouped(type='CHILDREN_RECURSIVE', extend=True)
+            # object.select_grouped(type='CHILDREN_RECURSIVE', extend=True) polls False without a
+            # 3D View on Blender 5.x (scripted or headless calls); select the same objects directly:
+            # the active armature's selectable descendants, keeping the current selection.
+            for child in ArmatureObj.children_recursive:
+                if child.visible_get() and not child.hide_select:
+                    child.select_set(True)
             bpy.ops.object.convert(target='MESH')
 
         bpy.ops.object.mode_set(mode='POSE')
